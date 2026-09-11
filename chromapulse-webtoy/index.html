@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>ChromaPulse — The Sensory Web Toy | GCSRM 2026</title>
+  <meta name="description" content="A visually stunning, hyper-interactive sensory web toy featuring squishy physics, ASMR bubble pops, procedural Web Audio synthesizer, and a forbidden chaos button.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="cyber">
+
+  <!-- Main Canvas Viewport -->
+  <canvas id="toy-canvas"></canvas>
+
+  <!-- Top HUD Header -->
+  <header class="hud-header glass-panel">
+    <div class="hud-left">
+      <div class="brand">
+        <span class="brand-glyph">🫧</span>
+        <div class="brand-text">
+          <h1>ChromaPulse</h1>
+          <span class="tagline">Sensory Kinetic Playground</span>
+        </div>
+      </div>
+
+      <!-- Stats: Score & Combo -->
+      <div class="stats-group">
+        <div class="stat-box">
+          <span class="stat-label">SCORE</span>
+          <span id="stat-score" class="stat-val">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">BEST</span>
+          <span id="stat-highscore" class="stat-val">0</span>
+        </div>
+        <div id="combo-badge" class="combo-badge">
+          <span class="combo-fire">🔥</span>
+          <span id="stat-combo" class="combo-text">x0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hud-right">
+      <!-- Audio Synth Controls -->
+      <div class="audio-panel">
+        <canvas id="audio-visualizer" width="54" height="24" title="Live Web Audio Visualizer"></canvas>
+        <div class="select-wrapper">
+          <select id="sound-pack-select" aria-label="Select Sound Pack">
+            <option value="asmr" selected>🎧 ASMR Pops</option>
+            <option value="zen">🎐 Crystal Zen</option>
+            <option value="arcade">👾 8-Bit Arcade</option>
+            <option value="synth">⚡ Cyber Synth</option>
+            <option value="meme">🔥 Dank Memes</option>
+          </select>
+        </div>
+        <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.7" title="Master Volume">
+        <button id="mute-btn" class="icon-btn" title="Toggle Sound" aria-label="Toggle Sound">🔊</button>
+      </div>
+
+      <!-- Theme Selector -->
+      <div class="theme-panel">
+        <select id="theme-select" aria-label="Select Theme">
+          <option value="cyber" selected>🌌 Cyber Neon</option>
+          <option value="pastel">🌸 Pastel Dream</option>
+          <option value="cosmic">🪐 Deep Cosmic</option>
+          <option value="vaporwave">🌴 Vaporwave</option>
+        </select>
+      </div>
+
+      <!-- Header Action Buttons -->
+      <div class="action-buttons">
+        <button id="meme-board-btn" class="icon-btn meme-btn" title="Meme Soundboard & Soundtracks">🗿</button>
+        <button id="snapshot-btn" class="icon-btn" title="Take Art Snapshot (Save PNG)">📸</button>
+        <button id="achievements-btn" class="icon-btn" title="Achievements">🏆</button>
+        <button id="help-btn" class="icon-btn" title="Guide & Easter Eggs">❓</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Context Controls (Top Sub-bar for Sandbox Mode) -->
+  <div class="sub-controls-container">
+    <!-- Tool Selector -->
+    <div id="tool-selector" class="segmented-control glass-panel">
+      <button class="tool-btn active" data-tool="slice" title="Slice Blade (Swipe across bubbles)">⚔️ Slice</button>
+      <button class="tool-btn" data-tool="pop" title="Tactile Popper (Click to burst)">🎯 Pop</button>
+      <button class="tool-btn" data-tool="repel" title="Magnetic Shield (Push bubbles away)">🛡️ Repel</button>
+    </div>
+
+    <!-- Gravity Mode Selector -->
+    <div id="gravity-selector" class="segmented-control glass-panel">
+      <button class="gravity-btn active" data-gravity="earth" title="Earth Gravity">⬇️ Gravity</button>
+      <button class="gravity-btn" data-gravity="zero" title="Zero-G Cosmic Drift">🛸 Zero-G</button>
+      <button class="gravity-btn" data-gravity="inverted" title="Inverted Floating Balloons">⬆️ Inverted</button>
+      <button class="gravity-btn" data-gravity="blackhole" title="Vortex Black Hole (Cursor Gravitational Singularity)">🌀 Vortex</button>
+    </div>
+  </div>
+
+  <!-- Bubble Wrap Action Controls (Visible only in bubble wrap mode) -->
+  <div id="bubblewrap-actions" class="bubblewrap-actions glass-panel">
+    <button id="reset-wrap-btn" class="action-btn">🔄 Fresh Sheet</button>
+    <button id="blast-all-btn" class="action-btn blast" onclick="window.chromaPulse.triggerBlast()">💥 Pop All</button>
+  </div>
+
+  <!-- The Cursed DO NOT CLICK Chaos Container (Mode D) -->
+  <div id="chaos-container" class="chaos-container">
+    <div class="chaos-warning-border">
+      <div class="warning-tape top">⚠️ RESTRICTED ACCESS — AUTHORIZED PERSONNEL ONLY ⚠️</div>
+      <div class="chaos-content">
+        <div class="nuclear-icon">☣️</div>
+        <button id="chaos-button" class="chaos-btn">DO NOT CLICK</button>
+        <p class="chaos-disclaimer">Zero consequences guaranteed. Absolutely nothing will explode.</p>
+      </div>
+      <div class="warning-tape bottom">⚠️ DANGER: HIGH GRAVITATIONAL VOLATILITY ⚠️</div>
+    </div>
+  </div>
+
+  <!-- Bottom Interactive Floating Mode Dock -->
+  <nav class="mode-dock glass-panel">
+    <button class="mode-btn active" data-mode="sandbox">
+      <span class="dock-icon">🫧</span>
+      <span class="dock-label">Bubble Sandbox</span>
+    </button>
+    <button class="mode-btn" data-mode="jelly">
+      <span class="dock-icon">🍮</span>
+      <span class="dock-label">Squishy Blobby</span>
+    </button>
+    <button class="mode-btn" data-mode="bubblewrap">
+      <span class="dock-icon">📦</span>
+      <span class="dock-label">Bubble Wrap ASMR</span>
+    </button>
+    <button class="mode-btn chaos-tab" data-mode="chaos">
+      <span class="dock-icon">🚨</span>
+      <span class="dock-label">DO NOT CLICK</span>
+    </button>
+  </nav>
+
+  <!-- Achievement Unlock Toast Notification -->
+  <div id="achievement-toast" class="achievement-toast glass-panel">
+    <span class="ach-icon">🏆</span>
+    <div class="ach-toast-info">
+      <span class="ach-banner">ACHIEVEMENT UNLOCKED!</span>
+      <h5 class="ach-title">Title</h5>
+      <p class="ach-desc">Description</p>
+    </div>
+  </div>
+
+  <!-- Meme Soundboard & Soundtracks Modal -->
+  <div id="meme-modal" class="modal-backdrop">
+    <div class="modal-card glass-panel meme-modal-card">
+      <div class="modal-header">
+        <h3>🔥 Meme Soundboard & Soundtracks</h3>
+        <button id="close-meme" class="close-btn">&times;</button>
+      </div>
+      
+      <!-- BGM Soundtrack Radio -->
+      <div class="meme-section">
+        <h4>🎵 Meme Soundtracks (BGM Radio)</h4>
+        <p class="meme-subtext">Play legendary loopable soundtracks while enjoying the web toy!</p>
+        <div class="soundtrack-grid">
+          <div class="soundtrack-item" data-track="coffin-dance">
+            <span class="st-icon">⚰️</span>
+            <div class="st-info">
+              <span class="st-title">Coffin Dance</span>
+              <span class="st-artist">Astronomia</span>
+            </div>
+            <button class="st-play-btn" data-track="coffin-dance">▶ Play</button>
+          </div>
+
+          <div class="soundtrack-item" data-track="badtothebone">
+            <span class="st-icon">🎸</span>
+            <div class="st-info">
+              <span class="st-title">Bad to the Bone</span>
+              <span class="st-artist">Guitar Riff</span>
+            </div>
+            <button class="st-play-btn" data-track="badtothebone">▶ Play</button>
+          </div>
+
+          <div class="soundtrack-item" data-track="amongus">
+            <span class="st-icon">🛸</span>
+            <div class="st-info">
+              <span class="st-title">Among Us Trap</span>
+              <span class="st-artist">Bass Remix</span>
+            </div>
+            <button class="st-play-btn" data-track="amongus">▶ Play</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Sound Effects -->
+      <div class="meme-section">
+        <h4>📢 Instant Meme Soundboard</h4>
+        <p class="meme-subtext">Click to blast instant sound bites!</p>
+        <div class="meme-sfx-grid">
+          <button class="meme-sfx-btn" data-sound="vine-boom">💥 Vine Boom</button>
+          <button class="meme-sfx-btn" data-sound="bruh">🗿 Bruh</button>
+          <button class="meme-sfx-btn" data-sound="emotional-damage">💔 Emotional Damage</button>
+          <button class="meme-sfx-btn" data-sound="taco-bell">🔔 Taco Bell Bong</button>
+          <button class="meme-sfx-btn" data-sound="oof">🤕 Roblox Oof</button>
+          <button class="meme-sfx-btn" data-sound="WinError">🖥️ Windows XP Error</button>
+          <button class="meme-sfx-btn" data-sound="airhorn">🎺 MLG Airhorn</button>
+          <button class="meme-sfx-btn" data-sound="anime-wow">👁️ Anime WOW</button>
+          <button class="meme-sfx-btn" data-sound="bonk">🏏 Bonk Doge</button>
+          <button class="meme-sfx-btn" data-sound="yeet">🚀 Yeet!</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Achievements Modal -->
+  <div id="achievements-modal" class="modal-backdrop">
+    <div class="modal-card glass-panel">
+      <div class="modal-header">
+        <h3>🏆 Hall of Achievements</h3>
+        <button id="close-achievements" class="close-btn">&times;</button>
+      </div>
+      <div id="achievements-list" class="achievements-list">
+        <!-- Dynamic list of achievements -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Guide & Secrets Modal -->
+  <div id="help-modal" class="modal-backdrop">
+    <div class="modal-card glass-panel help-card">
+      <div class="modal-header">
+        <h3>✨ ChromaPulse Guide & Secret Interactions</h3>
+        <button id="close-help" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="help-section">
+          <h4>🫧 1. Kinetic Bubble Sandbox</h4>
+          <p>• <strong>Click Empty Space:</strong> Spawns new elastic, glowing bubbles.</p>
+          <p>• <strong>⚔️ Slice Mode:</strong> Swipe across bubbles like a ninja to bifurcate them into musical arpeggio bursts.</p>
+          <p>• <strong>🌀 Vortex Black Hole:</strong> Turns your cursor into a gravitational singularity that pulls bubbles into cosmic orbital paths.</p>
+        </div>
+
+        <div class="help-section">
+          <h4>🍮 2. Squishy Soft-Body Blobby</h4>
+          <p>• <strong>Poke & Stretch:</strong> Click and drag anywhere along Blobby's gelatinous perimeter to stretch the spring-damper mesh.</p>
+          <p>• <strong>Tickle:</strong> Shake your mouse rapidly across Blobby's face to trigger happy anime eyes (^_^) and jiggle boings.</p>
+        </div>
+
+        <div class="help-section">
+          <h4>📦 3. Bubble Wrap ASMR</h4>
+          <p>• Tactile 3D grid with procedural frequency-modulated pop acoustics. Pop rows for combos or hit <em>Pop All</em> for a screen celebration.</p>
+        </div>
+
+        <div class="help-section">
+          <h4>🚨 4. The Forbidden DO NOT CLICK Button</h4>
+          <p>• Pushing the button initiates 10 escalating stages of chaos: warning blips, dodging buttons, low-gravity disco strobes, and a cosmic supernova!</p>
+        </div>
+
+        <div class="help-section easter-eggs">
+          <h4>🎁 Secret Easter Eggs & Shortcuts</h4>
+          <p><kbd>Space</kbd> : Supernova blast (pops everything on screen)</p>
+          <p><kbd>C</kbd> : Celebration confetti shower</p>
+          <p><kbd>D</kbd> : Toggle psychedelic Disco Strobe Mode</p>
+          <p><kbd>G</kbd> : Cycle through Gravity states</p>
+          <p><kbd>↑ ↑ ↓ ↓ ← → ← → B A</kbd> : Legendary Konami Overdrive mode!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts: Sound Engine -> Physics Engine -> Main Controller -->
+  <script src="js/audio.js"></script>
+  <script src="js/physics.js"></script>
+  <script src="js/toy.js"></script>
+</body>
+</html>
